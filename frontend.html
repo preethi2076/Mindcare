@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MindCare</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f4f6f8;
+  display: flex;
+  justify-content: center;
+}
+
+.box {
+  width: 420px;
+  background: #fff;
+  margin-top: 40px;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.chat {
+  height: 300px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.msg {
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 6px;
+}
+
+.user {
+  background: #007bff;
+  color: white;
+  text-align: right;
+}
+
+.bot {
+  background: #e9ecef;
+}
+
+input, textarea, button {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="box">
+
+<h3>🧠 MindCare Assistant</h3>
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <input id="username" placeholder="Enter username">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- CHAT -->
+<div id="chatBox" style="display:none;">
+  <button onclick="logout()" style="background:#dc3545;margin-bottom:8px;">
+    Logout
+  </button>
+
+  <div id="chat" class="chat"></div>
+
+  <input id="mood" placeholder="Mood (stressed)">
+  <textarea id="text" rows="2" placeholder="Type message"></textarea>
+  <button onclick="send()">Send</button>
+</div>
+
+</div>
+
+<script>
+let sessionId = localStorage.getItem("sessionId");
+
+const chatBox = document.getElementById("chat");
+const loginBox = document.getElementById("loginBox");
+const chatUI = document.getElementById("chatBox");
+
+/* Auto-login if session exists */
+if (sessionId) {
+  loginBox.style.display = "none";
+  chatUI.style.display = "block";
+}
+
+/* Add message to chat */
+function add(text, cls) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.innerText = text;
+  chatBox.appendChild(d);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+/* Login */
+function login() {
+  const username = document.getElementById("username").value;
+  if (!username) return;
+
+  sessionId = username.toLowerCase();
+  localStorage.setItem("sessionId", sessionId);
+
+  loginBox.style.display = "none";
+  chatUI.style.display = "block";
+}
+
+/* Logout */
+function logout() {
+  localStorage.removeItem("sessionId");
+  location.reload();
+}
+
+/* Send message */
+async function send() {
+  const text = document.getElementById("text").value;
+  const mood = document.getElementById("mood").value;
+  if (!text || !mood) return;
+
+  add(text, "user");
+  document.getElementById("text").value = "";
+
+  const url = `http://127.0.0.1:8000/chat?text=${encodeURIComponent(text)}&mood=${encodeURIComponent(mood)}&session=${sessionId}`;
+
+  const res = await fetch(url, { method: "POST" });
+  const data = await res.json();
+
+  add(data.response || "⚠️ No response from server", "bot");
+
+}
+</script>
+
+</body>
+</html>
